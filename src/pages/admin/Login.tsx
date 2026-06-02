@@ -46,7 +46,7 @@ export function Login() {
           <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
             <Target className="h-6 w-6 text-primary" />
           </div>
-          <CardTitle className="text-2xl">TaskMom Admin</CardTitle>
+          <CardTitle className="text-2xl">TskMom Admin</CardTitle>
           <CardDescription>Sign in to review quests and students</CardDescription>
         </CardHeader>
         <CardContent>
@@ -61,7 +61,7 @@ export function Login() {
                 id="email"
                 type="email"
                 autoComplete="username"
-                placeholder="admin@taskmom.app"
+                placeholder="admin@tskmom.app"
                 {...register('email')}
               />
               {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}

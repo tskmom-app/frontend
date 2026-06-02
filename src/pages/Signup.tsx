@@ -73,7 +73,7 @@ export function Signup() {
     <Shell>
       <div className="mb-8 max-w-md text-center">
         <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-semibold text-primary">
-          <Target className="h-4 w-4" /> TaskMom
+          <Target className="h-4 w-4" /> TskMom
         </div>
         <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
           Daily quests. Real problems.

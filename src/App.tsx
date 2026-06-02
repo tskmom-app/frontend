@@ -5,6 +5,7 @@ import { AdminLayout } from './components/layout/AdminLayout';
 import { Dashboard } from './pages/admin/Dashboard';
 import { Login } from './pages/admin/Login';
 import { QuestsPage } from './pages/admin/Quests';
+import { Settings } from './pages/admin/Settings';
 import { StudentDetail } from './pages/admin/StudentDetail';
 import { Students } from './pages/admin/Students';
 import { Submissions } from './pages/admin/Submissions';
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="students/:id" element={<StudentDetail />} />
           <Route path="submissions" element={<Submissions />} />
           <Route path="quests" element={<QuestsPage />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
       </Route>
 

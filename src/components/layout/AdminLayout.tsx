@@ -1,4 +1,12 @@
-import { BarChart3, ClipboardCheck, LogOut, ScrollText, Target, Users } from 'lucide-react';
+import {
+  BarChart3,
+  ClipboardCheck,
+  LogOut,
+  ScrollText,
+  Settings as SettingsIcon,
+  Target,
+  Users,
+} from 'lucide-react';
 import { NavLink, Outlet } from 'react-router-dom';
 
 import { useAuth } from '@/hooks/useAuth';
@@ -9,6 +17,7 @@ const NAV = [
   { to: '/admin/students', label: 'Students', icon: Users, end: false },
   { to: '/admin/submissions', label: 'Submissions', icon: ClipboardCheck, end: false },
   { to: '/admin/quests', label: 'Quests', icon: ScrollText, end: false },
+  { to: '/admin/settings', label: 'Settings', icon: SettingsIcon, end: false },
 ];
 
 export function AdminLayout() {
@@ -20,7 +29,7 @@ export function AdminLayout() {
         <div className="flex h-16 items-center gap-2 border-b px-6">
           <Target className="h-6 w-6 text-primary" />
           <div>
-            <div className="text-base font-bold leading-none">TaskMom</div>
+            <div className="text-base font-bold leading-none">TskMom</div>
             <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
               Admin
             </div>
@@ -66,7 +75,7 @@ export function AdminLayout() {
         <header className="flex h-14 items-center justify-between border-b bg-background px-4 md:hidden">
           <div className="flex items-center gap-2">
             <Target className="h-5 w-5 text-primary" />
-            <span className="font-bold">TaskMom</span>
+            <span className="font-bold">TskMom</span>
           </div>
           <button onClick={logout} className="text-sm text-muted-foreground">
             Log out

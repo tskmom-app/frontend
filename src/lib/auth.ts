@@ -1,7 +1,7 @@
 import type { Admin } from '@/types/api';
 
-const TOKEN_KEY = 'taskmom.token';
-const ADMIN_KEY = 'taskmom.admin';
+const TOKEN_KEY = 'tskmom.token';
+const ADMIN_KEY = 'tskmom.admin';
 
 export const authStore = {
   getToken(): string | null {

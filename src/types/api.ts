@@ -12,6 +12,25 @@ export interface ApiError {
 
 export type ApiResponse<T> = ApiSuccess<T> | ApiError;
 
+export type AiVerificationMode = 'off' | 'mock' | 'gemini';
+
+export interface AppSettings {
+  aiVerificationMode: AiVerificationMode;
+  aiAutoApproveConfidence: number;
+  geminiAvailable: boolean;
+}
+
+export interface AiTestResult {
+  ok: boolean;
+  mode: AiVerificationMode;
+  model?: string;
+  ms?: number;
+  verdict?: string;
+  confidence?: number;
+  reason?: string;
+  error?: string;
+}
+
 export type Track = 'Explorer' | 'Builder' | 'Creator';
 export type StudentStatus = 'active' | 'inactive' | 'paused';
 export type AssignmentStatus = 'pending' | 'submitted' | 'approved' | 'rejected';
