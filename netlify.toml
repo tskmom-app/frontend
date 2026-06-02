@@ -1,0 +1,16 @@
+# Netlify config — this repo's root IS the Vite app (frontend pushed separately).
+[build]
+  command = "npm install && npm run build"
+  publish = "dist"
+
+[build.environment]
+  # Build-time API base — the deployed Render backend (not a secret).
+  VITE_API_URL = "https://tskmom-backend.onrender.com"
+  NODE_VERSION = "20"
+
+# SPA fallback: serve index.html for client routes (real assets served first,
+# so JS/CSS keep correct MIME types — fixes the "octet-stream" module error).
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
