@@ -1,10 +1,16 @@
 import { Badge } from '@/components/ui/badge';
-import { QUALITY_FLAG_LABELS, STATUS_META, TRACK_META, qualityLevel } from '@/lib/format';
+import { QUALITY_FLAG_LABELS, STAGE_META, STATUS_META, qualityLevel } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import type { AiVerdict, AssignmentStatus, StudentStatus, Track } from '@/types/api';
+import type {
+  AiVerdict,
+  AssignmentStatus,
+  GrowthAreaProgress,
+  Stage,
+  StudentStatus,
+} from '@/types/api';
 
-export function TrackBadge({ track }: { track: Track }) {
-  const meta = TRACK_META[track];
+export function StageBadge({ stage }: { stage: Stage }) {
+  const meta = STAGE_META[stage];
   return (
     <span
       className={cn(
@@ -15,6 +21,26 @@ export function TrackBadge({ track }: { track: Track }) {
       {meta.label}
       <span className="opacity-60">{meta.ageRange}</span>
     </span>
+  );
+}
+
+/** Per-growth-area progress bars (the development % from the PDF). */
+export function GrowthBars({ growth }: { growth: GrowthAreaProgress[] }) {
+  if (!growth?.length) return null;
+  return (
+    <div className="space-y-2.5">
+      {growth.map((g) => (
+        <div key={g.growthAreaId}>
+          <div className="mb-1 flex items-center justify-between text-xs">
+            <span className="font-medium">{g.name}</span>
+            <span className="text-muted-foreground">{g.percent}%</span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div className="h-full rounded-full bg-primary" style={{ width: `${g.percent}%` }} />
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 

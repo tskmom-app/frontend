@@ -19,10 +19,11 @@ import {
   YAxis,
 } from 'recharts';
 
-import { TrackBadge } from '@/components/shared/Badges';
+import { StageBadge } from '@/components/shared/Badges';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/lib/api';
+import { STAGE_ORDER } from '@/lib/format';
 import type { DashboardData } from '@/types/api';
 
 export function Dashboard() {
@@ -145,7 +146,7 @@ export function Dashboard() {
                     <span className="w-5 text-sm font-bold text-muted-foreground">{i + 1}</span>
                     <div className="flex-1">
                       <div className="text-sm font-medium">{s.name}</div>
-                      <TrackBadge track={s.track} />
+                      <StageBadge stage={s.stage} />
                     </div>
                     <div className="text-right">
                       <div className="text-sm font-bold">{s.xp} XP</div>
@@ -159,14 +160,14 @@ export function Dashboard() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Students by track</CardTitle>
+              <CardTitle className="text-base">Students by stage</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-6">
-              {(['Explorer', 'Builder', 'Creator'] as const).map((track) => {
-                const found = data.trackDistribution.find((t) => t.track === track);
+              {STAGE_ORDER.map((stage) => {
+                const found = data.stageDistribution.find((t) => t.stage === stage);
                 return (
-                  <div key={track} className="flex items-center gap-3">
-                    <TrackBadge track={track} />
+                  <div key={stage} className="flex items-center gap-3">
+                    <StageBadge stage={stage} />
                     <span className="text-2xl font-bold">{found?.count ?? 0}</span>
                   </div>
                 );

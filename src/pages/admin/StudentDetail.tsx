@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, MessageCircle, Phone, Send } from 'lucide-react';
+import { ArrowLeft, KeyRound, Phone, Send } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 
-import { StatusBadge, StudentStatusBadge, TrackBadge } from '@/components/shared/Badges';
+import { GrowthBars, StatusBadge, StudentStatusBadge, StageBadge } from '@/components/shared/Badges';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -42,22 +42,13 @@ export function StudentDetail() {
     mutationFn: () => api.post(`/api/admin/students/${id}/assign`),
     onSuccess: (res) => {
       if (res) {
-        toast.success('Next quest assigned & sent on WhatsApp');
+        toast.success('Next mission assigned');
         qc.invalidateQueries({ queryKey: ['student', id] });
       } else {
-        toast.info('No eligible quests left for this student');
+        toast.info('No eligible missions left for this student');
       }
     },
-    onError: () => toast.error('Could not assign a quest'),
-  });
-
-  const digestMutation = useMutation({
-    mutationFn: () => api.post<{ sent: boolean }>(`/api/admin/students/${id}/parent-digest`),
-    onSuccess: (res) =>
-      res?.sent
-        ? toast.success('Progress digest sent to parent on WhatsApp')
-        : toast.error('Could not deliver the digest'),
-    onError: () => toast.error('Could not send digest'),
+    onError: () => toast.error('Could not assign a mission'),
   });
 
   if (isLoading || !data) {
@@ -82,7 +73,7 @@ export function StudentDetail() {
         <div className="space-y-1">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold tracking-tight">{data.name}</h1>
-            <TrackBadge track={data.track} />
+            <StageBadge stage={data.stage} />
             <StudentStatusBadge status={data.status} />
           </div>
           <p className="text-muted-foreground">
@@ -90,6 +81,12 @@ export function StudentDetail() {
           </p>
           <p className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
             <Phone className="h-3.5 w-3.5" /> {data.parent.name} — {data.parent.phone}
+          </p>
+          <p className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+            <KeyRound className="h-3.5 w-3.5" /> App login code:{' '}
+            <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs font-semibold text-foreground">
+              {data.loginCode}
+            </code>
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -106,15 +103,8 @@ export function StudentDetail() {
               <SelectItem value="inactive">Inactive</SelectItem>
             </SelectContent>
           </Select>
-          <Button
-            variant="outline"
-            onClick={() => digestMutation.mutate()}
-            disabled={digestMutation.isPending}
-          >
-            <MessageCircle className="h-4 w-4" /> Send progress to parent
-          </Button>
           <Button onClick={() => assignMutation.mutate()} disabled={assignMutation.isPending}>
-            <Send className="h-4 w-4" /> Send next quest
+            <Send className="h-4 w-4" /> Assign next mission
           </Button>
         </div>
       </div>
@@ -124,6 +114,19 @@ export function StudentDetail() {
         <StatBox label="Level" value={data.level} />
         <StatBox label="Streak" value={`🔥 ${data.streak}`} />
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Growth areas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {data.growth.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No growth tracked yet.</p>
+          ) : (
+            <GrowthBars growth={data.growth} />
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>

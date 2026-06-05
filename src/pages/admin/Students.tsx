@@ -3,7 +3,7 @@ import { Search } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { StudentStatusBadge, TrackBadge } from '@/components/shared/Badges';
+import { StudentStatusBadge, StageBadge } from '@/components/shared/Badges';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { api } from '@/lib/api';
-import { formatDate } from '@/lib/format';
+import { STAGE_META, STAGE_ORDER, formatDate } from '@/lib/format';
 import type { Paginated, Student } from '@/types/api';
 
 const ALL = '__all__';
@@ -26,16 +26,16 @@ export function Students() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<string>(ALL);
-  const [track, setTrack] = useState<string>(ALL);
+  const [stage, setStage] = useState<string>(ALL);
   const [page, setPage] = useState(1);
 
   const { data, isLoading } = useQuery({
-    queryKey: ['students', { search, status, track, page }],
+    queryKey: ['students', { search, status, stage, page }],
     queryFn: () =>
       api.get<Paginated<Student>>('/api/admin/students', {
         search: search || undefined,
         status: status === ALL ? undefined : status,
-        track: track === ALL ? undefined : track,
+        stage: stage === ALL ? undefined : stage,
         page,
         pageSize: 20,
       }),
@@ -65,20 +65,22 @@ export function Students() {
             />
           </div>
           <Select
-            value={track}
+            value={stage}
             onValueChange={(v) => {
-              setTrack(v);
+              setStage(v);
               setPage(1);
             }}
           >
-            <SelectTrigger className="sm:w-40">
-              <SelectValue placeholder="Track" />
+            <SelectTrigger className="sm:w-44">
+              <SelectValue placeholder="Stage" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL}>All tracks</SelectItem>
-              <SelectItem value="Explorer">Explorer</SelectItem>
-              <SelectItem value="Builder">Builder</SelectItem>
-              <SelectItem value="Creator">Creator</SelectItem>
+              <SelectItem value={ALL}>All stages</SelectItem>
+              {STAGE_ORDER.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {STAGE_META[s].label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Select
@@ -108,7 +110,7 @@ export function Students() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Age</TableHead>
-                <TableHead>Track</TableHead>
+                <TableHead>Stage</TableHead>
                 <TableHead>XP</TableHead>
                 <TableHead>Streak</TableHead>
                 <TableHead>Status</TableHead>
@@ -140,7 +142,7 @@ export function Students() {
                   <TableCell className="font-medium">{s.name}</TableCell>
                   <TableCell>{s.age}</TableCell>
                   <TableCell>
-                    <TrackBadge track={s.track} />
+                    <StageBadge stage={s.stage} />
                   </TableCell>
                   <TableCell className="font-semibold">{s.xp}</TableCell>
                   <TableCell>🔥 {s.streak}</TableCell>

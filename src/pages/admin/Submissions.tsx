@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Attachments } from '@/components/shared/Attachments';
-import { AiVerdictBadge, QualityBadge, StatusBadge, TrackBadge } from '@/components/shared/Badges';
+import { AiVerdictBadge, QualityBadge, StatusBadge, StageBadge } from '@/components/shared/Badges';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -93,7 +93,7 @@ export function Submissions() {
                   >
                     {s.student.name}
                   </Link>
-                  <TrackBadge track={s.student.track} />
+                  <StageBadge stage={s.student.stage} />
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   {s.assignmentStatus && <StatusBadge status={s.assignmentStatus} />}

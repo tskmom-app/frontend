@@ -3,15 +3,12 @@ import { useMutation } from '@tanstack/react-query';
 import {
   ArrowRight,
   CheckCircle2,
-  Eye,
+  Compass,
   GraduationCap,
-  Handshake,
-  Lightbulb,
-  MessageCircle,
   Phone,
   Rocket,
-  Search,
   ShieldCheck,
+  Smartphone,
   Sparkles,
   Target,
   User,
@@ -24,16 +21,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ApiError, api } from '@/lib/api';
-import type { Track } from '@/types/api';
+import { STAGE_META, STAGE_ORDER } from '@/lib/format';
+import type { Stage } from '@/types/api';
 
 const signupSchema = z.object({
   parentName: z.string().min(2, 'Please enter your name'),
   phone: z
     .string()
-    .min(7, 'Enter a valid WhatsApp number')
-    .regex(/^\+?[0-9\s-]{7,20}$/, 'Enter a valid WhatsApp number'),
+    .min(7, 'Enter a valid phone number')
+    .regex(/^\+?[0-9\s-]{7,20}$/, 'Enter a valid phone number'),
   studentName: z.string().min(2, "Enter your child's name"),
-  age: z.coerce.number().int().min(13, 'Ages 13–22 supported').max(22, 'Ages 13–22 supported'),
+  age: z.coerce.number().int().min(5, 'Ages 5–25 supported').max(25, 'Ages 5–25 supported'),
   class: z.string().min(1, 'Required'),
   school: z.string().min(1, 'Required'),
 });
@@ -43,15 +41,16 @@ type SignupForm = z.input<typeof signupSchema>;
 interface SignupResult {
   studentId: string;
   name: string;
-  track: Track;
+  stage: Stage;
+  loginCode: string;
   message: string;
 }
 
 const STEPS = [
   {
-    icon: MessageCircle,
-    title: 'Get a simple challenge',
-    body: 'Every morning at 9 AM, one small real-world challenge lands on WhatsApp. No app to install.',
+    icon: Smartphone,
+    title: 'Get a simple mission',
+    body: 'Every day, one small real-world mission appears in the TskMom app — tuned to your child’s stage.',
   },
   {
     icon: Rocket,
@@ -61,39 +60,37 @@ const STEPS = [
   {
     icon: Sparkles,
     title: 'Reflect, and grow',
-    body: 'They reply with what happened. A mentor reviews it and keeps the daily habit alive.',
+    body: 'They log a reflection. It’s mentor-reviewed, and each growth area inches up — building a childhood story over time.',
   },
 ];
 
-const TRACKS: { name: Track; ages: string; blurb: string; ring: string }[] = [
-  {
-    name: 'Explorer',
-    ages: '13–15',
-    blurb: 'Safe, confidence-building challenges that get them noticing the world and taking small responsibilities.',
-    ring: 'ring-sky-200 bg-sky-50',
-  },
-  {
-    name: 'Builder',
-    ages: '16–18',
-    blurb: 'Bigger challenges — talking to people, solving real problems, and acting independently.',
-    ring: 'ring-amber-200 bg-amber-50',
-  },
-  {
-    name: 'Creator',
-    ages: '19–22',
-    blurb: 'Real-world projects that build initiative, follow-through, and true independence.',
-    ring: 'ring-violet-200 bg-violet-50',
-  },
-];
+const STAGE_RINGS: Record<Stage, string> = {
+  foundation: 'ring-rose-200 bg-rose-50',
+  responsibility: 'ring-amber-200 bg-amber-50',
+  ownership: 'ring-sky-200 bg-sky-50',
+  judgment: 'ring-emerald-200 bg-emerald-50',
+  leadership: 'ring-violet-200 bg-violet-50',
+  independence: 'ring-fuchsia-200 bg-fuchsia-50',
+};
 
-const SKILLS = [
-  { name: 'Observation', icon: Eye },
-  { name: 'Communication', icon: MessageCircle },
-  { name: 'Problem Discovery', icon: Search },
-  { name: 'Problem Solving', icon: Lightbulb },
-  { name: 'Validation', icon: CheckCircle2 },
-  { name: 'Selling', icon: Handshake },
-  { name: 'Execution', icon: Rocket },
+const STAGE_BLURBS: Record<Stage, string> = {
+  foundation: 'First small responsibilities and noticing the world around them.',
+  responsibility: 'Owning daily routines and following through without reminders.',
+  ownership: 'Taking initiative, solving real problems, and acting independently.',
+  judgment: 'Making decisions, weighing trade-offs, and handling money and people.',
+  leadership: 'Leading others, running real projects, and seeing them through.',
+  independence: 'True self-direction — building things that matter in the real world.',
+};
+
+const GROWTH_AREAS = [
+  'Responsibility',
+  'Confidence',
+  'Communication',
+  'Initiative',
+  'Leadership',
+  'Problem Solving',
+  'Character',
+  'Independence',
 ];
 
 export function Signup() {
@@ -142,7 +139,7 @@ export function Signup() {
             </p>
 
             <div className="mt-7 flex flex-wrap gap-2">
-              {['On WhatsApp', 'No app to install', '5 min a day', 'Ages 13–22'].map((t) => (
+              {['In the app', 'One mission a day', '5 min a day', 'Ages 5–25'].map((t) => (
                 <span
                   key={t}
                   className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-sm font-medium text-secondary-foreground"
@@ -168,7 +165,7 @@ export function Signup() {
               <div className="border-b bg-gradient-to-br from-primary/10 to-transparent px-5 py-3.5">
                 <h2 className="text-base font-bold">Start free in 30 seconds</h2>
                 <p className="text-xs text-muted-foreground">
-                  First challenge tomorrow at 9 AM on WhatsApp.
+                  Your child’s first mission is ready in the app.
                 </p>
               </div>
 
@@ -182,7 +179,7 @@ export function Signup() {
                   <Field label="Your name" icon={User} error={errors.parentName?.message}>
                     <Input className="pl-9" placeholder="Asha Verma" {...register('parentName')} />
                   </Field>
-                  <Field label="WhatsApp number" icon={Phone} error={errors.phone?.message}>
+                  <Field label="Phone number" icon={Phone} error={errors.phone?.message}>
                     <Input
                       className="pl-9"
                       placeholder="+91 98765 43210"
@@ -200,7 +197,7 @@ export function Signup() {
                 </Field>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   <Field label="Age" error={errors.age?.message}>
-                    <Input type="number" min={13} max={22} placeholder="14" {...register('age')} />
+                    <Input type="number" min={5} max={25} placeholder="11" {...register('age')} />
                   </Field>
                   <Field label="Class" error={errors.class?.message}>
                     <Input placeholder="9" {...register('class')} />
@@ -226,7 +223,7 @@ export function Signup() {
                 </Button>
                 <p className="flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground">
                   <ShieldCheck className="h-3.5 w-3.5" />
-                  We only message you about your child's challenges.
+                  We only contact you about your child's progress.
                 </p>
               </form>
             </div>
@@ -259,41 +256,46 @@ export function Signup() {
         </div>
       </section>
 
-      {/* ---------------- Tracks ---------------- */}
+      {/* ---------------- Stages ---------------- */}
       <section className="mx-auto max-w-6xl px-4 py-16">
         <h2 className="text-center text-2xl font-bold tracking-tight sm:text-3xl">
-          A path that grows with them
+          A journey that grows with them
         </h2>
         <p className="mx-auto mt-2 max-w-xl text-center text-muted-foreground">
-          Challenges are matched to age — from first small responsibilities to real independence.
+          Missions are matched to a developmental stage — from first small responsibilities to real
+          independence.
         </p>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
-          {TRACKS.map((t) => (
-            <div key={t.name} className={`rounded-2xl p-6 ring-1 ${t.ring}`}>
+          {STAGE_ORDER.map((stage) => (
+            <div key={stage} className={`rounded-2xl p-6 ring-1 ${STAGE_RINGS[stage]}`}>
               <div className="flex items-baseline justify-between">
-                <h3 className="text-lg font-bold text-slate-900">{t.name}</h3>
-                <span className="text-sm font-semibold text-slate-500">Ages {t.ages}</span>
+                <h3 className="text-lg font-bold text-slate-900">{STAGE_META[stage].label}</h3>
+                <span className="text-sm font-semibold text-slate-500">
+                  Ages {STAGE_META[stage].ageRange}
+                </span>
               </div>
-              <p className="mt-2 text-sm text-slate-700">{t.blurb}</p>
+              <p className="mt-2 text-sm text-slate-700">{STAGE_BLURBS[stage]}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ---------------- Skills ---------------- */}
+      {/* ---------------- Growth areas ---------------- */}
       <section className="border-t bg-muted/30">
         <div className="mx-auto max-w-6xl px-4 py-16 text-center">
-          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">The 7 capabilities they build</h2>
+          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            The 8 growth areas we develop
+          </h2>
           <p className="mx-auto mt-2 max-w-xl text-muted-foreground">
-            Every challenge strengthens one real-life capability.
+            Every mission strengthens one real-life growth area — and you watch each one rise.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            {SKILLS.map((s) => (
+            {GROWTH_AREAS.map((name) => (
               <span
-                key={s.name}
+                key={name}
                 className="inline-flex items-center gap-2 rounded-full border bg-card px-4 py-2 text-sm font-medium shadow-sm"
               >
-                <s.icon className="h-4 w-4 text-primary" /> {s.name}
+                <Compass className="h-4 w-4 text-primary" /> {name}
               </span>
             ))}
           </div>
@@ -364,23 +366,35 @@ function SuccessScreen({ result }: { result: SignupResult }) {
           <p className="mt-2 text-muted-foreground">{result.message}</p>
 
           <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground">
-            <Sparkles className="h-4 w-4" /> Track assigned: {result.track}
+            <Sparkles className="h-4 w-4" /> Stage assigned: {STAGE_META[result.stage].label}
+          </div>
+
+          <div className="mt-6 rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {result.name}’s app login code
+            </p>
+            <p className="mt-1 font-mono text-3xl font-extrabold tracking-[0.3em] text-primary">
+              {result.loginCode}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Open the TskMom app and sign in with this code. Keep it safe.
+            </p>
           </div>
 
           <div className="mt-6 space-y-2 rounded-xl border bg-muted/40 p-4 text-left text-sm text-muted-foreground">
             <p className="flex items-start gap-2">
-              <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              Watch WhatsApp <strong className="text-foreground">tomorrow at 9 AM</strong> for the
-              first challenge.
+              <Smartphone className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              Open the <strong className="text-foreground">TskMom app</strong> to see the first
+              mission, tuned to your child’s stage.
             </p>
             <p className="flex items-start gap-2">
               <Rocket className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              No screens, no quizzes — just go do something real, then reply.
+              No screens, no quizzes — just go do something real, then log a reflection.
             </p>
           </div>
 
           <p className="mt-6 text-xs text-muted-foreground">
-            One simple challenge a day. Capable. Responsible. Independent. 💪
+            One simple mission a day. Capable. Responsible. Independent. 💪
           </p>
         </div>
       </div>

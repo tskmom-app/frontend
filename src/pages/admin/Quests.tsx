@@ -38,19 +38,33 @@ import {
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { ApiError, api } from '@/lib/api';
-import type { Paginated, QuestWithSkill, Skill } from '@/types/api';
+import { CATEGORY_LABELS } from '@/lib/format';
+import type { GrowthArea, MissionCategory, Paginated, QuestWithGrowthArea } from '@/types/api';
 
 const ALL = '__all__';
+
+const CATEGORIES = Object.keys(CATEGORY_LABELS) as MissionCategory[];
 
 const questFormSchema = z
   .object({
     title: z.string().min(3, 'Title is too short'),
-    skillId: z.string().uuid('Pick a skill'),
+    growthAreaId: z.string().uuid('Pick a growth area'),
+    category: z.enum([
+      'home',
+      'family',
+      'community',
+      'money',
+      'thinking',
+      'character',
+      'communication',
+      'leadership',
+      'problem_solving',
+    ]),
     mission: z.string().min(3, 'Required'),
     action: z.string().min(3, 'Required'),
     reflection: z.string().min(3, 'Required'),
-    ageMin: z.coerce.number().int().min(5).max(99),
-    ageMax: z.coerce.number().int().min(5).max(99),
+    ageMin: z.coerce.number().int().min(5).max(25),
+    ageMax: z.coerce.number().int().min(5).max(25),
     difficulty: z.coerce.number().int().min(1).max(5),
     xpReward: z.coerce.number().int().min(0).max(1000),
     isActive: z.boolean(),
@@ -64,23 +78,23 @@ type QuestForm = z.input<typeof questFormSchema>;
 export function QuestsPage() {
   const qc = useQueryClient();
   const [search, setSearch] = useState('');
-  const [skillId, setSkillId] = useState<string>(ALL);
+  const [growthAreaId, setGrowthAreaId] = useState<string>(ALL);
   const [page, setPage] = useState(1);
-  const [editing, setEditing] = useState<QuestWithSkill | null>(null);
+  const [editing, setEditing] = useState<QuestWithGrowthArea | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const { data: skills } = useQuery({
-    queryKey: ['skills'],
-    queryFn: () => api.get<Skill[]>('/api/admin/skills'),
+  const { data: growthAreas } = useQuery({
+    queryKey: ['growth-areas'],
+    queryFn: () => api.get<GrowthArea[]>('/api/admin/growth-areas'),
     staleTime: Infinity,
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ['quests', { search, skillId, page }],
+    queryKey: ['quests', { search, growthAreaId, page }],
     queryFn: () =>
-      api.get<Paginated<QuestWithSkill>>('/api/admin/quests', {
+      api.get<Paginated<QuestWithGrowthArea>>('/api/admin/quests', {
         search: search || undefined,
-        skillId: skillId === ALL ? undefined : skillId,
+        growthAreaId: growthAreaId === ALL ? undefined : growthAreaId,
         page,
         pageSize: 20,
       }),
@@ -89,10 +103,10 @@ export function QuestsPage() {
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/api/admin/quests/${id}`),
     onSuccess: () => {
-      toast.success('Quest deleted');
+      toast.success('Mission deleted');
       qc.invalidateQueries({ queryKey: ['quests'] });
     },
-    onError: () => toast.error('Could not delete quest'),
+    onError: () => toast.error('Could not delete mission'),
   });
 
   const totalPages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
@@ -101,7 +115,7 @@ export function QuestsPage() {
     setEditing(null);
     setDialogOpen(true);
   }
-  function openEdit(quest: QuestWithSkill) {
+  function openEdit(quest: QuestWithGrowthArea) {
     setEditing(quest);
     setDialogOpen(true);
   }
@@ -110,11 +124,11 @@ export function QuestsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Quests</h1>
-          <p className="text-muted-foreground">{data?.total ?? 0} quests in the bank</p>
+          <h1 className="text-2xl font-bold tracking-tight">Missions</h1>
+          <p className="text-muted-foreground">{data?.total ?? 0} missions in the bank</p>
         </div>
         <Button onClick={openCreate}>
-          <Plus className="h-4 w-4" /> New quest
+          <Plus className="h-4 w-4" /> New mission
         </Button>
       </div>
 
@@ -133,20 +147,20 @@ export function QuestsPage() {
             />
           </div>
           <Select
-            value={skillId}
+            value={growthAreaId}
             onValueChange={(v) => {
-              setSkillId(v);
+              setGrowthAreaId(v);
               setPage(1);
             }}
           >
             <SelectTrigger className="sm:w-52">
-              <SelectValue placeholder="Skill" />
+              <SelectValue placeholder="Growth area" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL}>All skills</SelectItem>
-              {skills?.map((s) => (
-                <SelectItem key={s.id} value={s.id}>
-                  {s.name}
+              <SelectItem value={ALL}>All growth areas</SelectItem>
+              {growthAreas?.map((g) => (
+                <SelectItem key={g.id} value={g.id}>
+                  {g.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -160,7 +174,8 @@ export function QuestsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Title</TableHead>
-                <TableHead>Skill</TableHead>
+                <TableHead>Growth area</TableHead>
+                <TableHead>Category</TableHead>
                 <TableHead>Ages</TableHead>
                 <TableHead>Difficulty</TableHead>
                 <TableHead>XP</TableHead>
@@ -172,15 +187,15 @@ export function QuestsPage() {
               {isLoading &&
                 Array.from({ length: 6 }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell colSpan={7}>
+                    <TableCell colSpan={8}>
                       <Skeleton className="h-6 w-full" />
                     </TableCell>
                   </TableRow>
                 ))}
               {!isLoading && data?.items.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
-                    No quests match these filters.
+                  <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
+                    No missions match these filters.
                   </TableCell>
                 </TableRow>
               )}
@@ -198,7 +213,10 @@ export function QuestsPage() {
                     <div className="truncate text-xs text-muted-foreground">{q.mission}</div>
                   </TableCell>
                   <TableCell>
-                    <SkillBadge name={q.skillName} />
+                    <SkillBadge name={q.growthAreaName} />
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap text-sm text-muted-foreground">
+                    {CATEGORY_LABELS[q.category]}
                   </TableCell>
                   <TableCell className="whitespace-nowrap">
                     {q.ageMin}–{q.ageMax}
@@ -269,7 +287,7 @@ export function QuestsPage() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         editing={editing}
-        skills={skills ?? []}
+        growthAreas={growthAreas ?? []}
       />
     </div>
   );
@@ -279,12 +297,12 @@ function QuestDialog({
   open,
   onOpenChange,
   editing,
-  skills,
+  growthAreas,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  editing: QuestWithSkill | null;
-  skills: Skill[];
+  editing: QuestWithGrowthArea | null;
+  growthAreas: GrowthArea[];
 }) {
   const qc = useQueryClient();
 
@@ -292,16 +310,16 @@ function QuestDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{editing ? 'Edit quest' : 'New quest'}</DialogTitle>
+          <DialogTitle>{editing ? 'Edit mission' : 'New mission'}</DialogTitle>
           <DialogDescription>
-            Every action must push the student into the real world — no quizzes, no videos.
+            Every action must push the child into the real world — no quizzes, no videos.
           </DialogDescription>
         </DialogHeader>
         {/* Remount the form when switching target so defaults reset cleanly. */}
         <QuestForm
           key={editing?.id ?? 'new'}
           editing={editing}
-          skills={skills}
+          growthAreas={growthAreas}
           onDone={() => {
             onOpenChange(false);
             qc.invalidateQueries({ queryKey: ['quests'] });
@@ -314,11 +332,11 @@ function QuestDialog({
 
 function QuestFormFields({
   editing,
-  skills,
+  growthAreas,
   onDone,
 }: {
-  editing: QuestWithSkill | null;
-  skills: Skill[];
+  editing: QuestWithGrowthArea | null;
+  growthAreas: GrowthArea[];
   onDone: () => void;
 }) {
   const {
@@ -332,7 +350,8 @@ function QuestFormFields({
     defaultValues: editing
       ? {
           title: editing.title,
-          skillId: editing.skillId,
+          growthAreaId: editing.growthAreaId,
+          category: editing.category,
           mission: editing.mission,
           action: editing.action,
           reflection: editing.reflection,
@@ -346,12 +365,13 @@ function QuestFormFields({
         }
       : {
           title: '',
-          skillId: '',
+          growthAreaId: '',
+          category: 'home',
           mission: '',
           action: '',
           reflection: '',
-          ageMin: 13,
-          ageMax: 15,
+          ageMin: 9,
+          ageMax: 11,
           difficulty: 1,
           xpReward: 15,
           isActive: true,
@@ -368,14 +388,15 @@ function QuestFormFields({
         : api.post('/api/admin/quests', body);
     },
     onSuccess: () => {
-      toast.success(editing ? 'Quest updated' : 'Quest created');
+      toast.success(editing ? 'Mission updated' : 'Mission created');
       onDone();
     },
     onError: (err) =>
-      toast.error(err instanceof ApiError ? err.message : 'Could not save quest'),
+      toast.error(err instanceof ApiError ? err.message : 'Could not save mission'),
   });
 
-  const skillId = watch('skillId');
+  const growthAreaId = watch('growthAreaId');
+  const category = watch('category');
   const isActive = watch('isActive');
   const requiresProof = watch('requiresProof');
 
@@ -385,20 +406,39 @@ function QuestFormFields({
         <Input placeholder="The Stranger Test" {...register('title')} />
       </FormField>
 
-      <FormField label="Skill" error={errors.skillId?.message}>
-        <Select value={skillId} onValueChange={(v) => setValue('skillId', v)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Pick a skill" />
-          </SelectTrigger>
-          <SelectContent>
-            {skills.map((s) => (
-              <SelectItem key={s.id} value={s.id}>
-                {s.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </FormField>
+      <div className="grid grid-cols-2 gap-3">
+        <FormField label="Growth area" error={errors.growthAreaId?.message}>
+          <Select value={growthAreaId} onValueChange={(v) => setValue('growthAreaId', v)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Pick a growth area" />
+            </SelectTrigger>
+            <SelectContent>
+              {growthAreas.map((g) => (
+                <SelectItem key={g.id} value={g.id}>
+                  {g.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
+        <FormField label="Category" error={errors.category?.message}>
+          <Select
+            value={category}
+            onValueChange={(v) => setValue('category', v as MissionCategory)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Pick a category" />
+            </SelectTrigger>
+            <SelectContent>
+              {CATEGORIES.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {CATEGORY_LABELS[c]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormField>
+      </div>
 
       <FormField label="Mission (the goal)" error={errors.mission?.message}>
         <Textarea rows={2} {...register('mission')} />
@@ -442,7 +482,7 @@ function QuestFormFields({
           checked={requiresProof}
           onChange={(e) => setValue('requiresProof', e.target.checked)}
         />
-        Require proof (ask the student for a photo / voice note)
+        Require proof (ask the child for a photo / voice note)
       </label>
 
       {requiresProof && (
@@ -453,7 +493,7 @@ function QuestFormFields({
 
       <DialogFooter>
         <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? 'Saving…' : editing ? 'Save changes' : 'Create quest'}
+          {mutation.isPending ? 'Saving…' : editing ? 'Save changes' : 'Create mission'}
         </Button>
       </DialogFooter>
     </form>

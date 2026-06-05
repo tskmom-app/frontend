@@ -1,4 +1,4 @@
-import type { AssignmentStatus, Track } from '@/types/api';
+import type { AssignmentStatus, MissionCategory, Stage } from '@/types/api';
 
 export function formatDate(iso: string | null | undefined): string {
   if (!iso) return '—';
@@ -29,10 +29,42 @@ export function timeAgo(iso: string | null | undefined): string {
   return `${days}d ago`;
 }
 
-export const TRACK_META: Record<Track, { label: string; ageRange: string; className: string }> = {
-  Explorer: { label: 'Explorer', ageRange: '13–15', className: 'bg-sky-100 text-sky-800' },
-  Builder: { label: 'Builder', ageRange: '16–18', className: 'bg-amber-100 text-amber-800' },
-  Creator: { label: 'Creator', ageRange: '19–22', className: 'bg-violet-100 text-violet-800' },
+export const STAGE_ORDER: Stage[] = [
+  'foundation',
+  'responsibility',
+  'ownership',
+  'judgment',
+  'leadership',
+  'independence',
+];
+
+export const STAGE_META: Record<Stage, { label: string; ageRange: string; className: string }> = {
+  foundation: { label: 'Foundation', ageRange: '5–8', className: 'bg-rose-100 text-rose-800' },
+  responsibility: {
+    label: 'Responsibility',
+    ageRange: '9–11',
+    className: 'bg-amber-100 text-amber-800',
+  },
+  ownership: { label: 'Ownership', ageRange: '12–14', className: 'bg-sky-100 text-sky-800' },
+  judgment: { label: 'Judgment', ageRange: '15–17', className: 'bg-emerald-100 text-emerald-800' },
+  leadership: { label: 'Leadership', ageRange: '18–20', className: 'bg-violet-100 text-violet-800' },
+  independence: {
+    label: 'Independence',
+    ageRange: '21–25',
+    className: 'bg-fuchsia-100 text-fuchsia-800',
+  },
+};
+
+export const CATEGORY_LABELS: Record<MissionCategory, string> = {
+  home: 'Home',
+  family: 'Family',
+  community: 'Community',
+  money: 'Money',
+  thinking: 'Thinking',
+  character: 'Character',
+  communication: 'Communication',
+  leadership: 'Leadership',
+  problem_solving: 'Problem Solving',
 };
 
 export const STATUS_META: Record<AssignmentStatus, { label: string; className: string }> = {

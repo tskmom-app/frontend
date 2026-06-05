@@ -31,7 +31,25 @@ export interface AiTestResult {
   error?: string;
 }
 
-export type Track = 'Explorer' | 'Builder' | 'Creator';
+export type Stage =
+  | 'foundation'
+  | 'responsibility'
+  | 'ownership'
+  | 'judgment'
+  | 'leadership'
+  | 'independence';
+
+export type MissionCategory =
+  | 'home'
+  | 'family'
+  | 'community'
+  | 'money'
+  | 'thinking'
+  | 'character'
+  | 'communication'
+  | 'leadership'
+  | 'problem_solving';
+
 export type StudentStatus = 'active' | 'inactive' | 'paused';
 export type AssignmentStatus = 'pending' | 'submitted' | 'approved' | 'rejected';
 
@@ -47,9 +65,19 @@ export interface LoginResponse {
   admin: Admin;
 }
 
-export interface Skill {
+export interface GrowthArea {
   id: string;
   name: string;
+  slug: string;
+  sortOrder: number;
+}
+
+export interface GrowthAreaProgress {
+  growthAreaId: string;
+  name: string;
+  slug: string;
+  points: number;
+  percent: number;
 }
 
 export interface Quest {
@@ -58,7 +86,8 @@ export interface Quest {
   mission: string;
   action: string;
   reflection: string;
-  skillId: string;
+  growthAreaId: string;
+  category: MissionCategory;
   ageMin: number;
   ageMax: number;
   difficulty: number;
@@ -69,8 +98,8 @@ export interface Quest {
   createdAt: string;
 }
 
-export interface QuestWithSkill extends Quest {
-  skillName: string;
+export interface QuestWithGrowthArea extends Quest {
+  growthAreaName: string;
 }
 
 export interface Student {
@@ -80,7 +109,8 @@ export interface Student {
   age: number;
   class: string;
   school: string;
-  track: Track;
+  stage: Stage;
+  loginCode: string;
   xp: number;
   streak: number;
   level: number;
@@ -118,6 +148,7 @@ export interface StudentDetail extends Student {
   parent: Parent;
   assignments: AssignmentWithQuest[];
   xpHistory: XpTransaction[];
+  growth: GrowthAreaProgress[];
 }
 
 export interface SubmissionAttachment {
@@ -144,7 +175,7 @@ export interface SubmissionListItem {
   reviewedAt: string | null;
   assignmentId: string | null;
   assignmentStatus: AssignmentStatus | null;
-  student: { id: string; name: string; track: Track };
+  student: { id: string; name: string; stage: Stage };
   quest: { id: string; title: string; xpReward: number };
 }
 
@@ -168,12 +199,12 @@ export interface DashboardData {
     maxStreak: number;
     retention30d: number | null;
   };
-  trackDistribution: Array<{ track: Track; count: number }>;
+  stageDistribution: Array<{ stage: Stage; count: number }>;
   activity: Array<{ day: string; submissions: number; approvals: number }>;
   leaderboard: Array<{
     id: string;
     name: string;
-    track: Track;
+    stage: Stage;
     xp: number;
     level: number;
     streak: number;
